@@ -1,21 +1,19 @@
 import requests
 import spotipy
-import pandas as pd
-import asyncio
 from spotipy.oauth2 import SpotifyClientCredentials
-
-from dotenv import load_dotenv
-load_dotenv()
 import os
 from dotenv import load_dotenv
 import sqlite3
 from collections import defaultdict
-load_dotenv('keys.env')
 
-
+load_dotenv()
 
 client_id = '06e96c265aed4f81b22f190fda0046d5'
-client_secret = os.environ.get("SPOTIPY_CLIENT_SECRET")
+client_secret = os.getenv('SPOTIPY_CLIENT_SECRET')
+if client_secret is None:
+    raise ValueError("SPOTIPY_CLIENT_SECRET is not set")
+else: 
+    print("Key is set.")
 client = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
 sp = spotipy.Spotify(client_credentials_manager=client)
 
@@ -87,10 +85,10 @@ def recursivePlaylistComparison(firstPlaylist, secondPlaylist, playListList, use
 
 
 
-async def suggest(numSongs):
+async def suggest(numSongs, guildID):
     connection = sqlite3.connect(os.getenv("DATA_PATH"))
     c = connection.cursor()
-    rows = c.execute('SELECT * FROM Songs')
+    rows = c.execute('SELECT * FROM Songs WHERE Server = ?', (guildID,))
     artists = defaultdict(int)
     tracks = defaultdict(int)
     
@@ -99,20 +97,28 @@ async def suggest(numSongs):
         tracks[song[1]] += 1
 
     #artists = sorted(artists.items(), key=lambda item: item[1])
-    tracks = sorted(tracks.items(), key=lambda item: item[1]) # lambda tells my sorting function that I want to sort by the second part of the tuple (the value, instead of the key)
+    tracks = sorted(tracks.items(), key=lambda item: item[1]) # lambda tells my sorting function that I want to sort by the second part of the triple (the value, instead of the key)
     #topArtists = artists[:5] 
     topTracks = tracks[:5]
     reccommendedArts = []
     reccommendedTracks = []
     #for artist, _ in topArtists:
         #reccommendedArts.append(artist)
-    for track, _ in topTracks: #underscore is just because im not using the second part of the tuples
+    for track, _ in topTracks: #underscore is just because im not using the second part of the triples
         reccommendedTracks.append(track)
 
-    results = sp.recommendations(seed_tracks= reccommendedTracks, limit = numSongs) #Limit ranges from 1-100 and returns n amount of songs, so set as desired (such as if ur gonna queue n amount of songs from this function)
+    results = sp.recommendations(seed_tracks= reccommendedTracks, limit = numSongs) #Spotify Web API Limit ranges from 1-100 and returns n amount of songs, so set as desired (such as if ur gonna queue n amount of songs from this function)
 
     connection.close()
     return results
+
+async def clearHistory(guildID):
+    connection = sqlite3.connect(os.getenv("DATA_PATH"))
+    c = connection.cursor()
+    c.execute('DELETE FROM Songs WHERE Server = ?', (guildID,))
+    connection.commit()
+    connection.close()
+
 
 
     

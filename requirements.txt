@@ -1,7 +1,13 @@
+__future__
 discord
+os
+asyncio
 youtube_search
 yt_dlp
-python-dotenv
+collections
+shutil
+sqlite3
+dotenv
+requests
 spotipy
-sqlite3-0611
-pandas
+

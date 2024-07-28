@@ -1,33 +1,18 @@
 
 from __future__ import unicode_literals
-
 import discord
 import os
 import asyncio
-
 from discord.ext import commands
 from discord import FFmpegPCMAudio
-
 from discord import Intents
-
-
 from youtube_search import YoutubeSearch
-
 import yt_dlp
-
-import os
 import spotifyTest
-
-import json
-
 from collections import namedtuple 
-
 import shutil
-
 import sqlite3
 import Music_Database
-
-
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -68,17 +53,17 @@ async def on_ready():
     help = "input a number between 1 and 10, and it will suggest that number of songs based on the server's taste profile, ex: (!dj 5)"
 )
 async def dj(ctx, numSongs):
-    print("do dj stuff")
-    #this is something like how it's gonna work
-    suggestions = await spotifyTest.suggest(numSongs)
+    suggestions = await spotifyTest.suggest(numSongs, ctx.guild.id)
     suggestedSongs = (suggestions)['tracks']
     
     for song in suggestedSongs:
+        await ctx.send("Suggesting " + song['name'] + " by " + song['artists'][0]['name'])
         print("Suggesting ", song['name'], song['artists'][0]['name'])
     print(suggestedSongs)
-    for song in suggestedSongs:
-        print("Suggesting ", song['name'], song['artists'][0]['name'])
-        await play(ctx, song['name'], song['artists'][0]['name'])
+    playQueue = [play(ctx, song['name'], song['artists'][0]['name']) for song in suggestedSongs]
+    await asyncio.gather(*playQueue)
+
+
 
 @bot.command(
        help = "Plays from spotify. Search by song name and artist, separated by a comma" 
@@ -126,7 +111,7 @@ async def playSpotify(ctx, *, search:str):
         )
     
     async def callback(interaction): # the function called when the user is done selecting options
-            await interaction.response.send_message(f"Ok you selected {(select.values[0])[3:]}!")
+            await interaction.response.send_message(f"Queuing {(select.values[0])[3:]}!")
             songChoiceIndex = int(select.values[0][0]) - 1
             songChoice = spotipySongs[songChoiceIndex]
             await play(ctx, songChoice['name'], songChoice['artists'][0]['name'], songChoice['id'], songChoice['artists'][0]['id'])
@@ -142,12 +127,12 @@ async def playSpotify(ctx, *, search:str):
 
 
 @bot.command(
-       help = "Stops playing and clears the queue" 
+       help = "Stops playing the current song and clears the queue" 
 )
 async def stop(ctx):
     if (ctx.voice_client):
         await ctx.guild.voice_client.disconnect() 
-        await ctx.send('Im gone')
+        await ctx.send('Leaving voice channel, clearing Queue')
     else: 
         await ctx.send("Not in a voice channel")
     for i in range(len(queues[ctx.guild.id])):
@@ -191,6 +176,8 @@ async def play(ctx, name, author, trackID = "", artistID = ""):
     if ctx.author.voice is None:
         await ctx.send("You need to be in a voice channel to use this command.")
         return
+    else:
+        await ctx.send("Now playing " + name + " by " + author)
     
     #serarch for song on spotify, gets full name with artist + song name
     #I'll use this for now, Spotify search thing is really really bad im not sure why
@@ -256,7 +243,7 @@ async def queue(ctx):
     
     serverQueue = queues[ctx.guild.id]
     if(len(serverQueue) == 0):
-        await ctx.send("Empty queue!")
+        await ctx.send("The queue is empty!")
         return
     listMsg = "```"
     listMsg += "---------Now Playing----------- \n"
@@ -320,6 +307,15 @@ async def getSongsSpotify(artist, song):
     result = spotifyTest.search(artist, song)
     print(result)
     return result['tracks']['items']
+
+@bot.command(
+        help = "Erases the server's song history in the bot's database. ONLY DO THIS IF YOU'RE READY FOR A CLEAN WIPE"
+)
+async def clearHistory(ctx):
+    #print(ctx.guild.id)
+    await spotifyTest.clearHistory(ctx.guild.id)
+    await ctx.send("Server history was succesfully cleared!")
+    print("test")
 
 #command to end playback
 
