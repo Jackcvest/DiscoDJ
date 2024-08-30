@@ -210,7 +210,7 @@ async def play(ctx, name, author, trackID = "", artistID = ""):
             voice_client = await voice_channel.connect()
 
             # Play the audio file. Had to set executable to the path, wasn't recognizign for some reason. Weird
-            audio_source = FFmpegPCMAudio(executable = 'ffmpeg.exe',source = nextSong.fileName)
+            audio_source = FFmpegPCMAudio(executable = 'ffmpeg',source = nextSong.fileName)
             voice_client.play(audio_source)
 
             # Wait for the audio to finish playing or everyone else to leave, check every 1 second

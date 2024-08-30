@@ -1,6 +1,6 @@
 
 FFMpeg test/ffmpeg.exe
-keys.env
+.env
 songs/
 __pycache__
 FFMpeg test/.env

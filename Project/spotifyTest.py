@@ -86,7 +86,7 @@ def recursivePlaylistComparison(firstPlaylist, secondPlaylist, playListList, use
 
 
 async def suggest(numSongs, guildID):
-    connection = sqlite3.connect(os.getenv("DATA_PATH"))
+    connection = sqlite3.connect("data.db")
     c = connection.cursor()
     rows = c.execute('SELECT * FROM Songs WHERE Server = ?', (guildID,))
     artists = defaultdict(int)
@@ -113,7 +113,7 @@ async def suggest(numSongs, guildID):
     return results
 
 async def clearHistory(guildID):
-    connection = sqlite3.connect(os.getenv("DATA_PATH"))
+    connection = sqlite3.connect(os.getenv("data.db"))
     c = connection.cursor()
     c.execute('DELETE FROM Songs WHERE Server = ?', (guildID,))
     connection.commit()
