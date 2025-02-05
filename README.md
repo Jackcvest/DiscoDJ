@@ -5,6 +5,8 @@ DiscoDJ is a Discord bot that utilizes the Spotify Web API to look up, play, and
 
 # Download and Setup
 
+This a general set up if you want to run a local instance of the bot. The SQLite3 database will be completely unique to anyone/any servers using your machine's instance of the bot.
+
 First, make sure you're running on Python version 3.10 or later to ensure the smoothest experience.
 
 after launching a virtual environment (whether that be locally through Python or externally through something like Docker), run 
